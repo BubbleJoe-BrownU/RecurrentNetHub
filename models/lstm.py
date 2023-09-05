@@ -83,6 +83,7 @@ class LSTM(nn.Module):
         for layer in self.layers:
             output, state = layer(inputs, h_0, c_0)
             inputs = output
+            inputs = self.dropout(inputs)
         
         return output, state
     
