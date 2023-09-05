@@ -25,7 +25,7 @@ class RNNBase(nn.Module):
         
     def forward(self, inputs, state=None):
         if state is None:
-            state = torch.zeros([1, self.hidden_size], device=inputs.device)
+            state = torch.zeros([inputs.shape[0], self.hidden_size], device=inputs.device)
         outputs = torch.empty([inputs.shape[0], inputs.shape[1], self.hidden_size])
         length = inputs.shape[1]
         for i in range(length):
