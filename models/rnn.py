@@ -11,6 +11,7 @@ class RNNBase(nn.Module):
     """
 
     def __init__(self, input_size, hidden_size, nonlinearity: Union[nn.ReLU, nn.Tanh]):
+        super().__init__()
         self.fc_i = nn.Linear(in_features=input_size, 
                               out_features= hidden_size)
         self.fc_h = nn.Linear(in_features=hidden_size, 
@@ -18,7 +19,7 @@ class RNNBase(nn.Module):
         self.fc_o = nn.Linear(in_features=hidden_size, 
                               out_features=hidden_size)
         self.hidden_size = hidden_size
-        self.nonlinearity = nonlinearity
+        self.nonlinearity = nonlinearity()
 
         # initialize all weights
         self.apply(self._init_weights)
@@ -26,7 +27,7 @@ class RNNBase(nn.Module):
     def forward(self, inputs, state=None):
         if state is None:
             state = torch.zeros([inputs.shape[0], self.hidden_size], device=inputs.device)
-        outputs = torch.empty([inputs.shape[0], inputs.shape[1], self.hidden_size])
+        outputs = torch.empty([inputs.shape[0], inputs.shape[1], self.hidden_size], device=inputs.device)
         length = inputs.shape[1]
         for i in range(length):
             state = self.nonlinearity(self.fc_i(inputs[:, i, :]) + self.fc_h(state))
@@ -46,6 +47,7 @@ class RNNBase(nn.Module):
 
 class RNN(nn.Module):
     """
+    Multi-layer RNN
     Expects the inputs to be of shape (N, L, H_in), where N is the batch size, L is the sequence length, and H_in is the input embedding size
     Returns output and hidden_state. Output is of shape (N, L, H_out) containing the output features from the last layer of the RNN.
     hidden_state is of shape (N, H_out) containing the final hidden state for each element in the batch.
@@ -57,10 +59,11 @@ class RNN(nn.Module):
             except for the first RNN layer, which takes in the original inputs
     """
     def __init__(self, input_size: int, hidden_size: int, nonlinearity: Union[nn.ReLU, nn.Tanh], num_layers: int = 1):
+        super().__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.layers = nn.ModuleList(RNNBase(input_size, hidden_size, nonlinearity) for _ in range(num_layers))
+        self.layers = nn.ModuleList([RNNBase(input_size, hidden_size, nonlinearity) for _ in range(num_layers)])
 
     def forward(self, inputs, state=None):
         for layer in self.layers:
